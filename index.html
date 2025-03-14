@@ -5,29 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LockClone - Générateur de Liens Sécurisés</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
-        input, button { margin: 10px; padding: 10px; }
-        .hidden { display: none; }
+        body { 
+            font-family: 'Arial', sans-serif; 
+            text-align: center; 
+            margin: 50px; 
+            background-color: #f7f7f7; 
+            color: #333;
+        }
+        h1 { 
+            color: #1e90ff; 
+            font-size: 36px; 
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        input, button { 
+            margin: 15px; 
+            padding: 12px 20px; 
+            border: 2px solid #ccc; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        input:focus, button:hover { 
+            border-color: #1e90ff; 
+            box-shadow: 0 4px 12px rgba(30, 144, 255, 0.2); 
+        }
+        button { 
+            cursor: pointer;
+            background-color: #1e90ff; 
+            color: white; 
+            border: none;
+        }
+        button:active { 
+            background-color: #4682b4; 
+        }
+        .hidden { 
+            display: none; 
+        }
+        #linkContainer { 
+            margin-top: 20px;
+            font-size: 18px;
+            color: #008000;
+        }
+        a { 
+            color: #1e90ff; 
+            text-decoration: none; 
+            font-weight: bold;
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+        #message { 
+            font-size: 20px; 
+            color: #008000; 
+            font-weight: bold;
+        }
+        #imageContainer {
+            margin-top: 20px;
+        }
+        #decryptedImage {
+            max-width: 100%;
+            height: auto;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>LockClone - Protège ton lien avec un mot de passe</h1>
     
     <div id="creation">
-        <input type="text" id="secret" placeholder="Entre ton message secret">
-        <input type="password" id="password" placeholder="Définis un mot de passe">
+        <input type="text" id="secret" placeholder="Entre ton message secret" style="width: 80%; max-width: 400px;">
+        
+        <!-- Options pour personnaliser la couleur, la police et l'image -->
+        <div id="styleOptions">
+            <label for="colorPicker">Choisir une couleur :</label>
+            <input type="color" id="colorPicker" value="#008000">
+            
+            <label for="fontSelect">Choisir une police :</label>
+            <select id="fontSelect">
+                <option value="Arial">Arial</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Tahoma">Tahoma</option>
+                <option value="Trebuchet MS">Trebuchet MS</option>
+                <option value="Lucida Sans">Lucida Sans</option>
+                <option value="Impact">Impact</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="Palatino Linotype">Palatino Linotype</option>
+                <option value="Arial Black">Arial Black</option>
+                <option value="Courier">Courier</option>
+                <option value="Brush Script MT">Brush Script MT</option>
+                <option value="MS Sans Serif">MS Sans Serif</option>
+            </select>
+            
+            <!-- Sélecteur d'image -->
+            <label for="imageUrl">URL de l'image :</label>
+            <input type="text" id="imageUrl" placeholder="Entrez l'URL de l'image">
+        </div>
+        
+        <!-- Sélection du mode -->
+        <label>Choisir le mode :</label>
+        <input type="radio" id="modeMessage" name="mode" value="message" checked> Message
+        <input type="radio" id="modeRedirect" name="mode" value="redirect"> Redirection
+        
+        <input type="text" id="redirectUrl" placeholder="Entrez l'URL de redirection" style="width: 80%; max-width: 400px;" class="hidden">
+        
+        <input type="password" id="password" placeholder="Définis un mot de passe" style="width: 80%; max-width: 400px;">
         <button onclick="generateLink()">Générer le lien</button>
         <p id="linkContainer" class="hidden">Lien sécurisé : <a id="secureLink" href="#" target="_blank"></a></p>
     </div>
     
     <div id="access" class="hidden">
-        <input type="password" id="inputPassword" placeholder="Entre le mot de passe">
-        <button onclick="decryptMessage()">Accéder au message</button>
+        <input type="password" id="inputPassword" placeholder="Entre le mot de passe" style="width: 80%; max-width: 400px;">
+        <button onclick="decryptOrRedirect()">Accéder</button>
         <p id="message"></p>
+        <div id="imageContainer">
+            <img id="decryptedImage" src="" alt="Image décryptée">
+        </div>
     </div>
 
     <script>
+        // Fonction pour appliquer les styles avant la génération du lien
+        function applyStylesToSecret(color, font) {
+            const secretMessage = document.getElementById('secret');
+            secretMessage.style.color = color;
+            secretMessage.style.fontFamily = font;
+        }
+
+        // Fonction pour appliquer les styles et l'image au message décrypté
+        function applyStylesToMessage(color, font, imageUrl) {
+            const message = document.getElementById('message');
+            message.style.color = color;
+            message.style.fontFamily = font;
+            
+            // Appliquer l'image si elle existe
+            const decryptedImage = document.getElementById('decryptedImage');
+            if (imageUrl) {
+                decryptedImage.src = imageUrl;
+                decryptedImage.style.display = 'block';
+            } else {
+                decryptedImage.style.display = 'none';
+            }
+        }
+
+        // Fonction pour générer le lien
         function generateLink() {
+            const color = document.getElementById('colorPicker').value;
+            const font = document.getElementById('fontSelect').value;
+            const imageUrl = document.getElementById('imageUrl').value.trim();
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            const redirectUrl = document.getElementById('redirectUrl').value.trim();
+
+            // Appliquer les styles au message secret avant la génération du lien
+            applyStylesToSecret(color, font);
+
             const secret = document.getElementById('secret').value;
             const password = document.getElementById('password').value;
             
@@ -35,29 +168,70 @@
                 alert('Veuillez entrer un message et un mot de passe.');
                 return;
             }
-            
+
+            // Encoder le message secret, le mot de passe, la couleur, la police et l'URL de l'image
             const encodedSecret = btoa(secret);
             const encodedPassword = btoa(password);
-            const link = `${window.location.origin}${window.location.pathname}?data=${encodedSecret}&key=${encodedPassword}`;
+            const encodedColor = btoa(color);
+            const encodedFont = btoa(font);
+            const encodedImage = imageUrl ? btoa(imageUrl) : null;
+
+            // Si le mode est "redirection", on encode l'URL de redirection
+            const encodedRedirectUrl = mode === 'redirect' ? btoa(redirectUrl) : null;
+
+            // Créer le lien sécurisé avec tous les paramètres
+            const link = `${window.location.origin}${window.location.pathname}?data=${encodedSecret}&key=${encodedPassword}&color=${encodedColor}&font=${encodedFont}&image=${encodedImage}&mode=${mode}&redirect=${encodedRedirectUrl}`;
             
             document.getElementById('secureLink').href = link;
             document.getElementById('secureLink').textContent = link;
             document.getElementById('linkContainer').classList.remove('hidden');
         }
-        
-        function decryptMessage() {
+
+        // Fonction pour afficher le message ou rediriger en fonction du mode
+        function decryptOrRedirect() {
             const urlParams = new URLSearchParams(window.location.search);
             const storedSecret = urlParams.get('data');
             const storedKey = urlParams.get('key');
             const inputPassword = btoa(document.getElementById('inputPassword').value);
-            
+
             if (inputPassword === storedKey) {
-                document.getElementById('message').textContent = `Message : ${atob(storedSecret)}`;
+                const mode = urlParams.get('mode');
+
+                if (mode === 'message') {
+                    // Appliquer les styles et afficher le message
+                    const storedColor = atob(urlParams.get('color'));
+                    const storedFont = atob(urlParams.get('font'));
+                    const storedImage = atob(urlParams.get('image'));
+
+                    applyStylesToMessage(storedColor, storedFont, storedImage);
+                    document.getElementById('message').textContent = `Message : ${atob(storedSecret)}`;
+                } else if (mode === 'redirect') {
+                    // Rediriger vers l'URL
+                    const redirectUrl = atob(urlParams.get('redirect'));
+                    window.location.href = redirectUrl;
+                }
             } else {
                 alert('Mot de passe incorrect !');
             }
         }
-        
+
+        // Gérer l'affichage du champ de redirection et la visibilité des options de personnalisation
+        document.querySelectorAll('input[name="mode"]').forEach((input) => {
+            input.addEventListener('change', function() {
+                const mode = this.value;
+                const redirectInput = document.getElementById('redirectUrl');
+                const styleOptions = document.getElementById('styleOptions');
+
+                if (mode === 'redirect') {
+                    redirectInput.classList.remove('hidden');
+                    styleOptions.classList.add('hidden');
+                } else {
+                    redirectInput.classList.add('hidden');
+                    styleOptions.classList.remove('hidden');
+                }
+            });
+        });
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('data') && urlParams.has('key')) {
