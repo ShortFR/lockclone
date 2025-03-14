@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LockClone - Générateur de Liens Sécurisés</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        input, button { margin: 10px; padding: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>LockClone - Protège ton lien avec un mot de passe</h1>
+    
+    <div id="creation">
+        <input type="text" id="secret" placeholder="Entre ton message secret">
+        <input type="password" id="password" placeholder="Définis un mot de passe">
+        <button onclick="generateLink()">Générer le lien</button>
+        <p id="linkContainer" class="hidden">Lien sécurisé : <a id="secureLink" href="#" target="_blank"></a></p>
+    </div>
+    
+    <div id="access" class="hidden">
+        <input type="password" id="inputPassword" placeholder="Entre le mot de passe">
+        <button onclick="decryptMessage()">Accéder au message</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function generateLink() {
+            const secret = document.getElementById('secret').value;
+            const password = document.getElementById('password').value;
+            
+            if (!secret || !password) {
+                alert('Veuillez entrer un message et un mot de passe.');
+                return;
+            }
+            
+            const encodedSecret = btoa(secret);
+            const encodedPassword = btoa(password);
+            const link = `${window.location.origin}${window.location.pathname}?data=${encodedSecret}&key=${encodedPassword}`;
+            
+            document.getElementById('secureLink').href = link;
+            document.getElementById('secureLink').textContent = link;
+            document.getElementById('linkContainer').classList.remove('hidden');
+        }
+        
+        function decryptMessage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const storedSecret = urlParams.get('data');
+            const storedKey = urlParams.get('key');
+            const inputPassword = btoa(document.getElementById('inputPassword').value);
+            
+            if (inputPassword === storedKey) {
+                document.getElementById('message').textContent = `Message : ${atob(storedSecret)}`;
+            } else {
+                alert('Mot de passe incorrect !');
+            }
+        }
+        
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('data') && urlParams.has('key')) {
+                document.getElementById('creation').classList.add('hidden');
+                document.getElementById('access').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
